@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عالم دعاء السري ❤️</title>
+  
+  <!-- FontAwesome Icons & Confetti Library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #ff2a6d;
+      --secondary: #05d9e8;
+      --bg-dark: #0b0c10;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    #bgCanvas {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .app-container {
+      background: var(--glass);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      padding: 40px 25px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255, 42, 109, 0.2);
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Lock Screen Pin Inputs */
+    .lock-screen h2 { font-size: 1.8rem; margin-bottom: 10px; color: var(--primary); }
+    .pin-input {
+      display: flex; justify-content: center; gap: 8px; margin: 25px 0;
+    }
+    .pin-digit {
+      width: 45px; height: 55px; font-size: 1.6rem; text-align: center;
+      background: rgba(0,0,0,0.4); border: 2px solid var(--glass-border);
+      border-radius: 12px; color: #fff; font-weight: bold;
+      transition: 0.3s;
+    }
+    .pin-digit:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 15px var(--primary); }
+
+    /* Custom Music Player Widget */
+    .music-widget {
+      position: fixed; top: 20px; left: 20px;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      padding: 10px 18px; border-radius: 30px;
+      display: flex; align-items: center; gap: 12px; z-index: 100;
+      cursor: pointer; transition: 0.3s;
+    }
+    .music-widget:hover { transform: scale(1.05); }
+    .disc { animation: spin 4s linear infinite; display: inline-block; color: var(--primary); font-size: 1.2rem; }
+    .disc.paused { animation-play-state: paused; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Interactive Sections */
+    .section { display: none; opacity: 0; transform: translateY(20px); transition: 0.5s; }
+    .section.active { display: block; opacity: 1; transform: translateY(0); }
+
+    /* Buttons & Animations */
+    .btn-custom {
+      background: linear-gradient(135deg, var(--primary), #ff758c);
+      color: white; border: none; padding: 14px 28px;
+      font-size: 1.1rem; font-weight: bold; border-radius: 50px;
+      cursor: pointer; transition: 0.3s; box-shadow: 0 5px 20px rgba(255, 42, 109, 0.4);
+      margin-top: 15px; width: 100%; display: inline-block;
+    }
+    .btn-custom:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 25px rgba(255, 42, 109, 0.6); }
+
+    /* Polaroid Cards */
+    .polaroid-grid { display: flex; gap: 15px; justify-content: center; margin: 20px 0; }
+    .polaroid {
+      background: white; padding: 10px 10px 25px 10px;
+      color: #333; border-radius: 8px; transform: rotate(-4deg);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.3s; flex: 1;
+    }
+    .polaroid:nth-child(2) { transform: rotate(4deg); }
+    .polaroid:hover { transform: scale(1.08) rotate(0deg); z-index: 5; }
+    .polaroid img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; }
+    .polaroid p { font-size: 0.85rem; margin-top: 8px; font-weight: bold; color:#d63384; }
+
+    /* Progress Bar */
+    .progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 20px; }
+    .progress-fill { height: 100%; width: 33%; background: var(--primary); border-radius: 10px; transition: 0.4s; }
+
+    /* Typewriter Text */
+    .typewriter-text { font-size: 1.1rem; line-height: 1.8; color: #e0e0e0; text-align: justify; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+  <!-- خلفية القلوب المتحركة -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- مشغل الصوت الجانبي -->
+  <div class="music-widget" onclick="toggleAudio()">
+    <i class="fa-solid fa-compact-disc disc paused" id="discIcon"></i>
+    <span style="font-size:0.85rem; font-weight:600;" id="musicStatus">تشغيل أغنيتنا 🎵</span>
+  </div>
+  
+  <!-- ملف الصوت: تأكد أن اسم ملف MP3 هو love-song.mp3 فـ نفس مجلد السيت -->
+  <audio id="bgAudio" loop src="love-song.mp3"></audio>
+
+  <div class="app-container">
+
+    <!-- 🔒 1. شاشة الرمز السرّي (11722) -->
+    <div class="section active" id="sec-lock">
+      <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
+      <h2>عالم دعاء السري 🔐</h2>
+      <p style="color:#aaa; font-size:0.9rem; margin-top:5px;">كتبي الكود السري ديالنا باش تفتحي السيت ❤️</p>
+      
+      <div class="pin-input">
+        <input type="password" maxlength="1" class="pin-digit" onkeyup="focusNext(this, 1)">
+        <input type="password" maxlength="1" class="pin-digit" onkeyup="focusNext(this, 2)">
+        <input type="password" maxlength="1" class="pin-digit" onkeyup="focusNext(this, 3)">
+        <input type="password" maxlength="1" class="pin-digit" onkeyup="focusNext(this, 4)">
+        <input type="password" maxlength="1" class="pin-digit" onkeyup="focusNext(this, 5)">
+      </div>
+      <button class="btn-custom" onclick="verifyPin()">دخول <i class="fa-solid fa-heart"></i></button>
+      <p id="errorMsg" style="color:#ff4757; margin-top:12px; display:none; font-size:0.85rem;">الكود غالط يا دعاء! تفكري الكود السري ديالنا 😉</p>
+    </div>
+
+    <!-- 📸 2. شاشة الاستقبال والذكريات -->
+    <div class="section" id="sec-memories">
+      <i class="fa-solid fa-crown" style="font-size: 2.5rem; color: #ffd700;"></i>
+      <h2 style="margin-top:10px;">مرحباً بيك يا أحلى دعاء ✨</h2>
+      <p style="color:#ccc; font-size:0.95rem;">هاد المكان صاوبتو خصيصاً على قبلك...</p>
+
+      <div class="polaroid-grid">
+        <div class="polaroid">
+          <!-- تقدر تبدل هاد الرابط برابط تصويرتها أو تصويرتكم -->
+          <img src="eyes.jpg" alt="دعاء">
+          <p>أجمل عينين 👀❤️</p>
+        </div>
+        <div class="polaroid">
+          <img src="smile.jpg" alt="دعاء">
+          <p>أحلى ضحكة 🌹</p>
+        </div>
+      </div>
+
+      <button class="btn-custom" onclick="showSection('sec-q1')">نبداو الاختبار؟ 🚀</button>
+    </div>
+
+    <!-- ❓ 3. السؤال الأول -->
+    <div class="section" id="sec-q1">
+      <div class="progress-bar"><div class="progress-fill" style="width: 33%;"></div></div>
+      <h2>سؤال سرّي للدعاء 🤔</h2>
+      <p style="margin: 20px 0; font-size: 1.1rem;">شكون هو الشخص الأكثر حظاً فالعالم كامل؟</p>
+      
+      <button class="btn-custom" style="background:rgba(255,255,255,0.1); margin-bottom:10px;" onclick="showSection('sec-q2')">أنا حيت لقيتك فحياني ❤️</button>
+      <button class="btn-custom" style="background:rgba(255,255,255,0.1); margin-bottom:10px;" onclick="showSection('sec-q2')">أنت طبعاً 👑</button>
+      <button class="btn-custom" onclick="showSection('sec-q2')">حنا بزوج بينا 🥰</button>
+    </div>
+
+    <!-- ❓ 4. السؤال الثاني (الزر الهارب) -->
+    <div class="section" id="sec-q2">
+      <div class="progress-bar"><div class="progress-fill" style="width: 66%;"></div></div>
+      <h2>سؤال الصراحة 😈</h2>
+      <p style="margin: 20px 0; font-size: 1.1rem;">واش كاتبغيني بزاااااف ولا شوية ؟</p>
+
+      <button class="btn-custom" onclick="showSection('sec-q3')">كنبغيك بزااااف أكيد! 💕</button>
+      <button class="btn-custom" id="escapeBtn" onmouseover="dodge()" style="background:#555; margin-top:10px;">غير شوية 😜</button>
+    </div>
+
+    <!-- ❓ 5. السؤال الثالث -->
+    <div class="section" id="sec-q3">
+      <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div>
+      <h2>الوعد الأخير 💍</h2>
+      <p style="margin: 20px 0; font-size: 1.1rem;">واش مستعدة نكملو هاد الطريق الزوينة مع بعضياتنا؟</p>
+
+      <button class="btn-custom" onclick="finishApp()">نعم، بكل حب ودائماً! ❤️✨</button>
+    </div>
+
+    <!-- 💌 6. الرسالة النهائية -->
+    <div class="section" id="sec-final">
+      <i class="fa-solid fa-heart-circle-check" style="font-size: 3.5rem; color: var(--primary); animation: pulse 1.5s infinite;"></i>
+      <h2 style="margin-top:10px; color: var(--secondary);">ربحتي قلبي يا دعاء! 🎉</h2>
+      
+      <div class="typewriter-text" id="finalLetter"></div>
+
+      <div style="margin-top:25px; font-weight:bold; color:var(--primary); font-size:1.2rem;">
+        أحبك اليوم، غداً وإلى الأبد 💖
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. PIN Code (11722)
+    const CORRECT_PIN = "11722";
+    
+    function focusNext(elem, index) {
+      if (elem.value.length === 1 && index < 5) {
+        document.querySelectorAll('.pin-digit')[index].focus();
+      }
+    }
+
+    function verifyPin() {
+      let digits = document.querySelectorAll('.pin-digit');
+      let entered = "";
+      digits.forEach(d => entered += d.value);
+      if(entered === CORRECT_PIN) {
+        showSection('sec-memories');
+        triggerConfetti();
+      } else {
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // 2. Dodge Button
+    function dodge() {
+      const btn = document.getElementById('escapeBtn');
+      const x = (Math.random() - 0.5) * 180;
+      const y = (Math.random() - 0.5) * 180;
+      btn.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    // 3. Audio Player
+    let playing = false;
+    function toggleAudio() {
+      const audio = document.getElementById('bgAudio');
+      const disc = document.getElementById('discIcon');
+      const status = document.getElementById('musicStatus');
+      if (!playing) {
+        audio.play();
+        disc.classList.remove('paused');
+        status.innerText = "شغالة الآن 🎶";
+        playing = true;
+      } else {
+        audio.pause();
+        disc.classList.add('paused');
+        status.innerText = "تشغيل الأغنية 🎵";
+        playing = false;
+      }
+    }
+
+    // 4. Final Message typewriter
+    const message = "دعاء الكبيدة ديالي... هاد الموقع الصغير صاوبتو بيدي ليك كلمة بكلمة، حيت بغيت نبرهن ليك بلي المكانة ديالك عندي ماشي عادية. أنتِ ماشي غير حبيبة، أنتِ العمر ، والملجأ، وأحلى حاجة وقعات ليا فحياتي. شكراً حيت كاينا فحياني وشكراً على كل ضحكة كترسميها فوجهي. كنبغيك بزاف وكنتمنى ديما نشوف هاد الابتسامة الزوينة فوجهك! ❤️✨";
+    
+    function finishApp() {
+      showSection('sec-final');
+      triggerConfetti();
+      let i = 0;
+      const letterElem = document.getElementById('finalLetter');
+      letterElem.innerHTML = "";
+      
+      let timer = setInterval(() => {
+        if (i < message.length) {
+          letterElem.innerHTML += message.charAt(i);
+          i++;
+        } else {
+          clearInterval(timer);
+        }
+      }, 40);
+    }
+
+    function triggerConfetti() {
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+    }
+
+    // 5. Canvas Hearts Dynamic Background
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let hearts = [];
+    for(let i=0; i<40; i++) {
+      hearts.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 12 + 6,
+        speed: Math.random() * 1.5 + 0.5,
+        opacity: Math.random() * 0.5 + 0.2
+      });
+    }
+
+    function drawHearts() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hearts.forEach(h => {
+        ctx.fillStyle = `rgba(255, 42, 109, ${h.opacity})`;
+        ctx.beginPath();
+        ctx.arc(h.x, h.y, h.size/2, 0, Math.PI*2);
+        ctx.fill();
+        h.y -= h.speed;
+        if(h.y < -10) h.y = canvas.height + 10;
+      });
+      requestAnimationFrame(drawHearts);
+    }
+    drawHearts();
+  </script>
+</body>
+</html>
